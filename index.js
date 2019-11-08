@@ -20,7 +20,7 @@ module.exports = exports = (secret, whitelist, config = {}) => fn => {
             : []
         const pathConfig = Array.isArray(whiteList[0]) ? whiteList[0][1] : {}
         const method = pathConfig.method ? pathConfig.method === req.method : true
-        if (!bearerToken && !whitelisted && method) {
+        if (!bearerToken && (!whiteList || !method)) {
             res.writeHead(401)
             res.end(config.resAuthMissing || 'missing Authorization header')
             return
@@ -30,7 +30,7 @@ module.exports = exports = (secret, whitelist, config = {}) => fn => {
             const token = bearerToken.replace('Bearer ', '')
             req.jwt = jwt.verify(token, secret)
         } catch (err) {
-            if (!whitelisted) {
+            if (!whiteList || !method) {
                 res.writeHead(401)
                 res.end(config.resAuthInvalid || 'invalid token in Authorization header')
                 return
