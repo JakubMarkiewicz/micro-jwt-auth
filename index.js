@@ -15,9 +15,12 @@ module.exports = exports = (secret, whitelist, config = {}) => fn => {
     return (req, res) => {
         const bearerToken = req.headers.authorization
         const pathname = url.parse(req.url).pathname
-        const whitelisted = Array.isArray(whitelist) && whitelist.indexOf(pathname) >= 0
-
-        if (!bearerToken && !whitelisted) {
+        const whiteList = Array.isArray(whitelist)
+            ? whitelist.find(v => (Array.isArray(v) ? v[0] === pathname : v === pathname))
+            : []
+        const pathConfig = Array.isArray(whiteList[0]) ? whiteList[0][1] : {}
+        const method = pathConfig.method ? pathConfig.method === req.method : true
+        if (!bearerToken && !whitelisted && method) {
             res.writeHead(401)
             res.end(config.resAuthMissing || 'missing Authorization header')
             return
